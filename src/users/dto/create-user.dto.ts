@@ -1,10 +1,18 @@
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
+import { Match } from 'src/common/decorators/match.decorator';
 
 export class CreateUserDto {
-  @IsEmail({}, { message: 'Email manzili noto‘g‘ri formatda' })
+  @IsNotEmpty({ message: 'Full name is required' })
+  fullName: string;
+
+  @IsEmail({}, { message: 'Invalid email format' })
   email: string;
 
-  @IsString({ message: 'Parol matn bo‘lishi kerak' })
-  @MinLength(6, { message: 'Parol kamida 6 ta belgidan iborat bo‘lishi kerak' })
+  @IsNotEmpty({ message: 'Password is required' })
+  @MinLength(6, { message: 'Password must be at least 6 characters' })
   password: string;
+
+  @IsNotEmpty({ message: 'Confirm password is required' })
+  @Match('password', { message: 'Passwords do not match' })
+  confirmPassword: string;
 }

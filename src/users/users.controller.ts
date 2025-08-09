@@ -7,53 +7,58 @@ import {
   Put,
   Delete,
   NotFoundException,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
+@ApiTags('Users')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  // GET /users/:id
   @Get(':id')
-  async findById(@Param('id') id: string): Promise<User> {
-    return this.usersService.findById(+id);
+  @ApiOperation({ summary: 'Get user by ID' })
+  @ApiResponse({ status: 200, description: 'User found successfully' })
+  async findById(@Param('id', ParseIntPipe) id: number): Promise<User> {
+    return this.usersService.findById(id);
   }
 
-  // GET /users
   @Get()
+  @ApiOperation({ summary: 'Get all users' })
   async findAll(): Promise<User[]> {
     return this.usersService.findAll();
   }
 
-  // POST /users (faqat adminlar ishlatishi kerak, keyinchalik guard qo‘shasiz)
   @Post()
+  @ApiOperation({ summary: 'Create a new user (admin only)' })
   async create(@Body() createUserDto: CreateUserDto): Promise<User> {
     return this.usersService.create(
+      createUserDto.fullName,
       createUserDto.email,
       createUserDto.password,
     );
   }
 
-  // PUT /users/:id
   @Put(':id')
+  @ApiOperation({ summary: 'Update user by ID' })
   async update(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateData: Partial<User>,
   ): Promise<User> {
-    const user = await this.usersService.findById(+id);
+    const user = await this.usersService.findById(id);
     if (!user) throw new NotFoundException('User not found');
 
     Object.assign(user, updateData);
     return this.usersService.update(user);
   }
 
-  // DELETE /users/:id
   @Delete(':id')
-  async remove(@Param('id') id: string): Promise<{ message: string }> {
-    await this.usersService.remove(+id);
+  @ApiOperation({ summary: 'Delete user by ID' })
+  async remove(@Param('id', ParseIntPipe) id: number): Promise<{ message: string }> {
+    await this.usersService.remove(id);
     return { message: 'User deleted successfully' };
   }
 }

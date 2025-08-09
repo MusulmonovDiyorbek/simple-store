@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Not } from 'typeorm';
 import { Product } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { Category } from '../categories/entities/category.entity';
@@ -10,15 +10,24 @@ export class ProductsService {
   constructor(
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
+
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
   ) {}
 
-  // 🌐 Barcha mahsulotlarni olish (foydalanuvchiga ochiq)
-  async findAll(): Promise<Product[]> {
-    return this.productRepository.find({
-      relations: ['category'],
-    });
+  // 🌐 Barcha mahsulotlarni olish (kategoriya bo‘yicha filter bilan)
+  async findAll(categoryName?: string): Promise<Product[]> {
+    const query = this.productRepository
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.category', 'category');
+
+    if (categoryName && categoryName.toLowerCase() !== 'all') {
+      query.where('LOWER(category.name) = LOWER(:categoryName)', {
+        categoryName,
+      });
+    }
+
+    return query.getMany();
   }
 
   // 🧾 Bitta mahsulotni ID orqali olish
@@ -56,7 +65,7 @@ export class ProductsService {
     return this.productRepository.save(product);
   }
 
-  // 🔄 Mahsulotni o‘chirish
+  // ❌ Mahsulotni o‘chirish
   async remove(id: number): Promise<void> {
     const product = await this.productRepository.findOne({ where: { id } });
 
@@ -65,5 +74,26 @@ export class ProductsService {
     }
 
     await this.productRepository.remove(product);
+  }
+
+  // 🔁 Bogʻliq mahsulotlar (kategoriya asosida, joriy mahsulotdan tashqari)
+  async findRelated(productId: number): Promise<Product[]> {
+    const product = await this.productRepository.findOne({
+      where: { id: productId },
+      relations: ['category'],
+    });
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    return this.productRepository.find({
+      where: {
+        category: { id: product.category.id },
+        id: Not(productId),
+      },
+      take: 4,
+      relations: ['category'],
+    });
   }
 }

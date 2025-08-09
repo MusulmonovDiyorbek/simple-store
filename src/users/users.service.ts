@@ -28,9 +28,10 @@ export class UsersService {
     return user;
   }
 
-  // 📌 Yangi foydalanuvchi yaratish (default role = 'user')
-  async create(email: string, password: string): Promise<User> {
+  // 📌 Yangi foydalanuvchi yaratish (fullName, email, password)
+  async create(fullName: string, email: string, password: string): Promise<User> {
     const user = this.userRepository.create({
+      fullName,
       email,
       password,
       role: 'user', // yoki 'admin'

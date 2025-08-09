@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, ManyToOne, CreateDateColumn } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Product } from '../../products/entities/product.entity';
 
@@ -12,4 +12,7 @@ export class Wishlist {
 
   @ManyToOne(() => Product, (product) => product.wishlists, { eager: false })
   product: Product;
+
+  @CreateDateColumn()
+  createdAt: Date; // 📅 Qachon qo‘shilganini avtomatik saqlaydi
 }

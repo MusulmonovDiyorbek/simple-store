@@ -18,13 +18,16 @@ export class WishlistService {
     private productRepository: Repository<Product>,
   ) {}
 
+  // 📜 Foydalanuvchining wishlist’ini olish (oxirgi qo‘shilganlari tepada)
   async findAllByUser(userId: number): Promise<Wishlist[]> {
     return this.wishlistRepository.find({
       where: { user: { id: userId } },
-      relations: ['user', 'product'],
+      relations: ['product'],
+      order: { createdAt: 'DESC' }, // 🆕 Eng so‘nggi tepada
     });
   }
 
+  // ➕ Wishlist’ga qo‘shish
   async addToWishlist(userId: number, productId: number): Promise<Wishlist> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     const product = await this.productRepository.findOne({ where: { id: productId } });
@@ -34,9 +37,10 @@ export class WishlistService {
     }
 
     const wishlistItem = this.wishlistRepository.create({ user, product });
-    return this.wishlistRepository.save(wishlistItem);
+    return await this.wishlistRepository.save(wishlistItem); // 📅 createdAt avtomatik
   }
 
+  // ❌ Wishlist’dan olib tashlash
   async removeFromWishlist(userId: number, productId: number): Promise<void> {
     await this.wishlistRepository.delete({
       user: { id: userId },

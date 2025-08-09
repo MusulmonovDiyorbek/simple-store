@@ -1,22 +1,44 @@
-import { Controller, Post, Delete, Get, Param } from '@nestjs/common';
+import { 
+  Controller, 
+  Post, 
+  Delete, 
+  Get, 
+  Param, 
+  UseGuards, 
+  Request, 
+  ParseIntPipe 
+} from '@nestjs/common';
 import { WishlistService } from './wishlist.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 
+@ApiTags('Wishlist')
+@ApiBearerAuth()
 @Controller('wishlist')
+@UseGuards(JwtAuthGuard)
 export class WishlistController {
   constructor(private readonly wishlistService: WishlistService) {}
 
-  @Get(':userId')
-  findAll(@Param('userId') userId: string) {
-    return this.wishlistService.findAllByUser(+userId);
+  @Get()
+  @ApiOperation({ summary: 'Foydalanuvchining wishlistini olish' })
+  @ApiResponse({ status: 200, description: 'Wishlist muvaffaqiyatli olindi' })
+  findAll(@Request() req) {
+    return this.wishlistService.findAllByUser(req.user.id);
   }
 
-  @Post(':userId/:productId')
-  add(@Param('userId') userId: string, @Param('productId') productId: string) {
-    return this.wishlistService.addToWishlist(+userId, +productId);
+  @Post(':productId')
+  @ApiOperation({ summary: 'Wishlistga mahsulot qo‘shish' })
+  @ApiParam({ name: 'productId', type: Number, description: 'Mahsulot ID' })
+  @ApiResponse({ status: 201, description: 'Mahsulot wishlistga qo‘shildi' })
+  add(@Request() req, @Param('productId', ParseIntPipe) productId: number) {
+    return this.wishlistService.addToWishlist(req.user.id, productId);
   }
 
-  @Delete(':userId/:productId')
-  remove(@Param('userId') userId: string, @Param('productId') productId: string) {
-    return this.wishlistService.removeFromWishlist(+userId, +productId);
+  @Delete(':productId')
+  @ApiOperation({ summary: 'Wishlistdan mahsulotni o‘chirish' })
+  @ApiParam({ name: 'productId', type: Number, description: 'Mahsulot ID' })
+  @ApiResponse({ status: 200, description: 'Mahsulot wishlistdan o‘chirildi' })
+  remove(@Request() req, @Param('productId', ParseIntPipe) productId: number) {
+    return this.wishlistService.removeFromWishlist(req.user.id, productId);
   }
 }
