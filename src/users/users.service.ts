@@ -7,7 +7,7 @@ import { User } from './entities/user.entity';
 export class UsersService {
   constructor(
     @InjectRepository(User)
-    private userRepository: Repository<User>,
+    private readonly userRepository: Repository<User>,
   ) {}
 
   // 📌 Email bo‘yicha foydalanuvchini topish
@@ -28,26 +28,30 @@ export class UsersService {
     return user;
   }
 
-  // 📌 Yangi foydalanuvchi yaratish (fullName, email, password)
+  // 📌 Yangi foydalanuvchi yaratish
   async create(fullName: string, email: string, password: string): Promise<User> {
     const user = this.userRepository.create({
       fullName,
       email,
       password,
-      role: 'user', // yoki 'admin'
+      role: 'user',
     });
-
     return this.userRepository.save(user);
   }
 
-  // 🔁 Foydalanuvchini yangilash
+  // 📌 Foydalanuvchini saqlash (yangi yoki yangilash)
+  async save(user: User): Promise<User> {
+    return this.userRepository.save(user);
+  }
+
+  // 📌 Foydalanuvchini yangilash
   async update(user: User): Promise<User> {
     return this.userRepository.save(user);
   }
 
   // ❌ Foydalanuvchini o‘chirish
   async remove(id: number): Promise<void> {
-    const user = await this.findById(id); // mavjudligini tekshiramiz
+    const user = await this.findById(id);
     await this.userRepository.remove(user);
   }
 
